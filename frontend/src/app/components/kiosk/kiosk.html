@@ -1,0 +1,29 @@
+<div class="kiosk-container">
+
+  <h1>Kiosco de Acceso</h1>
+
+  <!-- Input del código -->
+  <input
+    type="text"
+    [(ngModel)]="accessCode"
+    placeholder="Ingresa tu código"
+  >
+
+<!-- Botón principal -->
+  <button
+    (click)="validateAccess()"
+    [disabled]="isLoading"
+  >
+    {{ isLoading ? 'Validando...' : 'Ingresar' }}
+  </button>
+
+  <!-- Mensaje dinámico -->
+  <p
+    *ngIf="message"
+    [class.success]="messageType === 'success'"
+    [class.error]="messageType === 'error'"
+  >
+    {{ message }}
+  </p>
+
+</div>
