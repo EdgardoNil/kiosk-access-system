@@ -58,7 +58,7 @@ export class Kiosk implements OnInit, OnDestroy {
 
           return this.checkInService.checkIn(accessCode).pipe(
 
-            // Maneja respuesta exitosa
+            // Maneja respuestas exitosas del backend
             tap((response) => {
               this.showMessage(
                 response.message,
@@ -66,10 +66,14 @@ export class Kiosk implements OnInit, OnDestroy {
               );
             }),
 
-            // Maneja errores de conexión
-            catchError(() => {
+            // Maneja errores HTTP y errores de conexión
+            catchError((error) => {
+
+              // Obtiene el mensaje enviado por el backend
+              const backendMessage = error.error?.message;
+
               this.showMessage(
-                'Acceso denegado / Código inválido',
+                backendMessage || 'Error de conexión con el servidor',
                 'error'
               );
 
@@ -116,6 +120,9 @@ export class Kiosk implements OnInit, OnDestroy {
     setTimeout(() => {
       this.message = '';
       this.messageType = '';
+      
+      // Actualiza la vista después de limpiar el mensaje
+      this.changeDetectorRef.detectChanges();
     }, 3000);
   }
 
