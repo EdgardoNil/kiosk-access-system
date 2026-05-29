@@ -11,6 +11,49 @@ Proyecto fullstack para validar el ingreso de miembros mediante un código de ac
 
 ---
 
+# Base de Datos
+
+El script SQL también se encuentra en:
+
+```txt
+backend/schema.sql
+```
+
+Crear base de datos:
+
+```sql
+CREATE DATABASE kiosk_access;
+```
+
+Crear tablas e insertar datos:
+
+```sql
+-- Tabla de miembros
+CREATE TABLE members (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    access_code VARCHAR(50) UNIQUE NOT NULL,
+    status VARCHAR(20) NOT NULL
+);
+
+-- Tabla de registros
+CREATE TABLE access_logs (
+    id SERIAL PRIMARY KEY,
+    member_id INTEGER REFERENCES members(id),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    result VARCHAR(20) NOT NULL
+);
+
+-- Insertar registros
+INSERT INTO members (name, access_code, status)
+VALUES
+    ('Edgardo Nil', 'ABC123', 'activo'),
+    ('Yaderim Guzman', 'XYZ789', 'inactivo'),
+    ('Roberto Garcia', 'TEST456', 'activo');
+```
+
+---
+
 # Backend
 
 Instalar dependencias:
@@ -45,47 +88,6 @@ http://localhost:3000
 
 ---
 
-# Base de Datos
-
-El script SQL también se encuentra en:
-
-```txt
-backend/schema.sql
-```
-
-Crear base de datos:
-```sql
-CREATE DATABASE kiosk_access;
-```
-
-Crear tablas e insertar datos:
-
-```sql
---Tabla de miembros
-CREATE TABLE members (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    access_code VARCHAR(50) UNIQUE NOT NULL,
-    status VARCHAR(20) NOT NULL
-);
--- Tabla de Registros
-CREATE TABLE access_logs (
-    id SERIAL PRIMARY KEY,
-    member_id INTEGER REFERENCES members(id),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    result VARCHAR(20) NOT NULL
-);
-
--- Insertar Registros
-INSERT INTO members (name, access_code, status)
-VALUES
-    ('Edgardo Nil', 'ABC123', 'activo'),
-    ('Yaderim Guzman', 'XYZ789', 'inactivo'),
-    ('Roberto Garcia', 'TEST456', 'activo');
-```
-
----
-
 # Frontend
 
 Instalar dependencias:
@@ -108,6 +110,7 @@ http://localhost:4200
 ```
 
 ---
+
 
 # Pregunta Teórica
 
