@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 
 // Permite usar formularios con ngModel
 import { FormsModule } from '@angular/forms';
@@ -21,49 +21,83 @@ import { CheckInService } from '../../services/check-in';
 })
 export class Kiosk implements OnInit, OnDestroy {
 
+  // Código ingresado por el usuario
   accessCode: string = '';
+
+  // Mensaje mostrado en pantalla
   message: string = '';
+
+  // Tipo de mensaje: éxito o error
   messageType: string = '';
+
+  // Controla si el botón está cargando o bloqueado
   isLoading: boolean = false;
 
-  // Recibe los clics del botón
+  // Captura los clics del botón
   private checkInClick$ = new Subject<string>();
 
-  // Cierra la suscripción al destruir el componente
+  // Libera recursos al destruir el componente
   private destroy$ = new Subject<void>();
 
-  constructor(private checkInService: CheckInService) {}
+  constructor(
+    private checkInService: CheckInService,
+    private changeDetectorRef: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
+
+    // Escucha los clics enviados al Subject
     this.checkInClick$
       .pipe(
-        tap(() => this.isLoading = true),
 
-        // Evita enviar otra petición si ya hay una en proceso
-        exhaustMap((accessCode) =>
-          this.checkInService.checkIn(accessCode).pipe(
+        // Evita múltiples peticiones simultáneas
+        exhaustMap((accessCode) => {
+
+          // Bloquea el botón mientras valida
+          this.isLoading = true;
+
+          return this.checkInService.checkIn(accessCode).pipe(
+
+            // Maneja respuestas exitosas del backend
             tap((response) => {
               this.showMessage(
                 response.message,
                 response.success ? 'success' : 'error'
               );
             }),
-            catchError(() => {
-              this.showMessage('Error de conexión con el servidor', 'error');
+
+            // Maneja errores HTTP y errores de conexión
+            catchError((error) => {
+
+              // Obtiene el mensaje enviado por el backend
+              const backendMessage = error.error?.message;
+
+              this.showMessage(
+                backendMessage || 'Error de conexión con el servidor',
+                'error'
+              );
+
               return EMPTY;
             }),
+
+            // Reactiva el botón al finalizar
             finalize(() => {
               this.isLoading = false;
+
+              // Actualiza la vista inmediatamente
+              this.changeDetectorRef.detectChanges();
             })
-          )
-        ),
+          );
+        }),
 
         takeUntil(this.destroy$)
       )
       .subscribe();
   }
 
+  // Valida el código ingresado
   validateAccess(): void {
+
     const accessCode = this.accessCode.trim();
 
     if (!accessCode) {
@@ -71,21 +105,30 @@ export class Kiosk implements OnInit, OnDestroy {
       return;
     }
 
+    // Envía el clic a RxJS
     this.checkInClick$.next(accessCode);
   }
 
+  // Muestra mensajes temporales en pantalla
   private showMessage(message: string, type: string): void {
+
     this.message = message;
     this.messageType = type;
     this.accessCode = '';
 
+    // Limpia mensaje después de 3 segundos
     setTimeout(() => {
       this.message = '';
       this.messageType = '';
+      
+      // Actualiza la vista después de limpiar el mensaje
+      this.changeDetectorRef.detectChanges();
     }, 3000);
   }
 
   ngOnDestroy(): void {
+
+    // Libera las suscripciones activas
     this.destroy$.next();
     this.destroy$.complete();
   }
